@@ -15,7 +15,7 @@
     "node": ">=20"
   },
   "bin": {
-    "apimock": "./dist/cli.js"
+    "apimock": "dist/cli.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

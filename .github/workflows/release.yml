@@ -14,6 +14,10 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    env:
+      # A job-level `if` cannot read the `secrets` context, so the check is
+      # lifted into an env var the step below can see.
+      HAS_NPM_TOKEN: ${{ secrets.NPM_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -28,9 +32,13 @@ jobs:
       # Opens a version PR when changesets are pending, and publishes when that
       # PR is merged. Provenance ties the published tarball to this workflow
       # run, so the origin of a release is verifiable rather than asserted.
+      # Without a token the action still opens the version PR, which is the
+      # useful half — it just does not publish. Passing an empty `publish` is
+      # how that is expressed, and it keeps the workflow from failing on every
+      # push before the token exists.
       - uses: changesets/action@v1
         with:
-          publish: npm publish --provenance --access public
+          publish: ${{ env.HAS_NPM_TOKEN == 'true' && 'npm publish --provenance --access public' || '' }}
           version: npx changeset version
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
