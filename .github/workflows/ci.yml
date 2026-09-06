@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: node ${{ matrix.node }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The oldest version `engines` claims to support and the current LTS.
+        # Claiming >=20 without ever running on 20 is how a package ships a
+        # syntax the version it advertises cannot parse.
+        node: ['20', '22']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run format:check
+      - run: npm run test:coverage
+      - run: npm run build
+      # The built CLI, not the source: a package whose bin is broken passes
+      # every test and fails on the first `npx`.
+      - name: The built CLI works
+        run: |
+          node dist/cli.js validate fixtures/specs/bookstore.yaml
+          node dist/cli.js scenarios
+          head -1 dist/cli.js | grep -q '^#!/usr/bin/env node'
