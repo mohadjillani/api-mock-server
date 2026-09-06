@@ -1,6 +1,6 @@
 {
   "name": "@mohadjillani/api-mock-server",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Turn an OpenAPI 3 spec into a running mock server with seeded deterministic data, real CRUD semantics, response validation against the contract, and chaos scenarios for testing the bad days.",
   "author": "Mohad Jillani <mohad.jillani@gmail.com>",
   "license": "MIT",
