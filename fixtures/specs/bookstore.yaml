@@ -1,0 +1,159 @@
+openapi: 3.0.3
+info:
+  title: Bookstore
+  version: 1.0.0
+  description: >
+    A small spec written for this repository's own tests. It exercises the
+    features that decide whether a spec-driven mock is usable: an envelope with
+    a total, a nested collection, an enum, formats, a nullable field, and the
+    x-mock extensions.
+paths:
+  /books:
+    get:
+      operationId: listBooks
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100 }
+        - name: offset
+          in: query
+          schema: { type: integer, minimum: 0 }
+      responses:
+        '200':
+          description: A page of books
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, total]
+                properties:
+                  data:
+                    type: array
+                    x-mock-count: 8
+                    items: { $ref: '#/components/schemas/Book' }
+                  total: { type: integer }
+        '500':
+          description: Something went wrong
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+    post:
+      operationId: createBook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/NewBook' }
+      responses:
+        '201':
+          description: The created book
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Book' }
+        '400':
+          description: Invalid
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+  /books/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: integer }
+    get:
+      operationId: getBook
+      responses:
+        '200':
+          description: One book
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Book' }
+        '404':
+          description: No such book
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+    patch:
+      operationId: updateBook
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/NewBook' }
+      responses:
+        '200':
+          description: The updated book
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Book' }
+        '404':
+          description: No such book
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+    delete:
+      operationId: deleteBook
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          description: No such book
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+  /authors:
+    get:
+      operationId: listAuthors
+      responses:
+        '200':
+          description: Every author
+          content:
+            application/json:
+              schema:
+                type: array
+                x-mock-count: 3
+                items: { $ref: '#/components/schemas/Author' }
+  /health:
+    get:
+      operationId: health
+      responses:
+        '200':
+          description: Fine
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [ok] }
+components:
+  schemas:
+    Book:
+      type: object
+      required: [id, title, status, publishedAt]
+      properties:
+        id: { type: integer, minimum: 1 }
+        title: { type: string, x-mock-faker: commerce.productName }
+        authorId: { type: integer, x-mock-relation: authors }
+        status: { type: string, enum: [draft, published, out_of_print] }
+        publishedAt: { type: string, format: date }
+        pageCount: { type: integer, minimum: 1, maximum: 1200 }
+        isbn: { type: string, nullable: true }
+    NewBook:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string }
+        authorId: { type: integer }
+        status: { type: string, enum: [draft, published, out_of_print] }
+    Author:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: integer }
+        name: { type: string, x-mock-faker: person.fullName }
+        email: { type: string, format: email }
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
